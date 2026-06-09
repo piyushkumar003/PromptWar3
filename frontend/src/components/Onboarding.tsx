@@ -4,6 +4,7 @@ import axios from 'axios';
 
 const Onboarding = () => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     age_group: '20-30',
@@ -27,6 +28,7 @@ const Onboarding = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
     try {
       const response = await axios.post('https://piyush6363-ecoguide-backend.hf.space/users/onboard', formData);
       localStorage.setItem('user_id', response.data.id);
@@ -36,6 +38,8 @@ const Onboarding = () => {
       localStorage.setItem('user_id', 'mock-user-1');
       localStorage.setItem('mock_user_data', JSON.stringify(formData));
       navigate('/');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -106,8 +110,12 @@ const Onboarding = () => {
             </div>
           </div>
 
-          <button type="submit" className="btn-primary w-full py-3 mt-8 text-lg">
-            Calculate My Footprint
+          <button 
+            type="submit" 
+            disabled={loading}
+            className="btn-primary w-full py-3 mt-8 text-lg flex justify-center items-center"
+          >
+            {loading ? "Calculating..." : "Calculate My Footprint"}
           </button>
         </form>
       </div>
