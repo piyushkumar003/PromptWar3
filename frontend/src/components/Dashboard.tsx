@@ -1,10 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, lazy, Suspense, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { Leaf, Zap, Car, Trash2, ArrowDown } from 'lucide-react';
-import Chatbot from './Chatbot';
-import Simulator from './Simulator';
+
+const Chatbot = lazy(() => import('./Chatbot'));
+const Simulator = lazy(() => import('./Simulator'));
+
+const MemoizedPieChart = memo(RechartsPieChart);
+const MemoizedBarChart = memo(RechartsBarChart);
 
 const COLORS = ['#10b981', '#f59e0b', '#ef4444', '#6366f1'];
 
@@ -82,22 +86,27 @@ const Dashboard = () => {
 
   const currentFootprint = footprints[footprints.length - 1];
 
+  const pieData = useMemo(() => {
+    if (!currentFootprint) return [];
+    return [
+      { name: 'Transport', value: currentFootprint.transport_emissions },
+      { name: 'Energy', value: currentFootprint.energy_emissions },
+      { name: 'Food', value: currentFootprint.food_emissions },
+      { name: 'Waste', value: currentFootprint.waste_emissions },
+    ];
+  }, [currentFootprint]);
+
+  const barData = useMemo(() => {
+    return footprints.map((f, i) => ({
+      name: `Month ${i+1}`,
+      total: f.total_emissions
+    }));
+  }, [footprints]);
+
   if (!currentFootprint) return <div>No data available. Please complete onboarding.</div>;
 
-  const pieData = [
-    { name: 'Transport', value: currentFootprint.transport_emissions },
-    { name: 'Energy', value: currentFootprint.energy_emissions },
-    { name: 'Food', value: currentFootprint.food_emissions },
-    { name: 'Waste', value: currentFootprint.waste_emissions },
-  ];
-
-  const barData = footprints.map((f, i) => ({
-    name: `Month ${i+1}`,
-    total: f.total_emissions
-  }));
-
   // Calculate Sustainability Score (0-100), simple mock calculation
-  const score = Math.max(0, 100 - (currentFootprint.total_emissions / 10));
+  const score = useMemo(() => Math.max(0, 100 - (currentFootprint.total_emissions / 10)), [currentFootprint.total_emissions]);
 
   return (
     <div className="space-y-6 pb-20">
@@ -149,14 +158,14 @@ const Dashboard = () => {
           <h3 className="text-xl font-semibold mb-6">Emissions Breakdown</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
+              <MemoizedPieChart>
                 <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
                   {pieData.map((_entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }} itemStyle={{ color: '#f8fafc' }} />
-              </PieChart>
+              </MemoizedPieChart>
             </ResponsiveContainer>
           </div>
           <div className="flex justify-center gap-4 mt-4 text-sm">
@@ -173,13 +182,13 @@ const Dashboard = () => {
           <h3 className="text-xl font-semibold mb-6">Historical Trend</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={barData}>
+              <MemoizedBarChart data={barData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
                 <XAxis dataKey="name" stroke="#94a3b8" />
                 <YAxis stroke="#94a3b8" />
                 <Tooltip cursor={{ fill: '#334155', opacity: 0.4 }} contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }} />
                 <Bar dataKey="total" fill="#10b981" radius={[4, 4, 0, 0]} />
-              </BarChart>
+              </MemoizedBarChart>
             </ResponsiveContainer>
           </div>
         </div>
@@ -213,7 +222,9 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <Simulator />
+      <Suspense fallback={<div className="h-20 flex justify-center items-center"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-500"></div></div>}>
+        <Simulator />
+      </Suspense>
 
       {/* Floating Chatbot Toggle */}
       <button 
@@ -223,7 +234,11 @@ const Dashboard = () => {
         <Leaf className="text-white" />
       </button>
 
-      {isChatOpen && <Chatbot onClose={() => setIsChatOpen(false)} />}
+      {isChatOpen && (
+        <Suspense fallback={null}>
+          <Chatbot onClose={() => setIsChatOpen(false)} />
+        </Suspense>
+      )}
     </div>
   );
 };

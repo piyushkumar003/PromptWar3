@@ -23,8 +23,8 @@ class FootprintRecord(Base):
     __tablename__ = "footprints"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
-    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+    user_id = Column(Integer, ForeignKey("users.id"), index=True)
+    timestamp = Column(DateTime, default=datetime.datetime.utcnow, index=True)
     
     transport_emissions = Column(Float)
     energy_emissions = Column(Float)
@@ -38,7 +38,7 @@ class Goal(Base):
     __tablename__ = "goals"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
+    user_id = Column(Integer, ForeignKey("users.id"), index=True)
     description = Column(String)
     target_reduction_percentage = Column(Float)
     status = Column(String, default="active")
