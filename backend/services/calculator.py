@@ -1,5 +1,5 @@
 from schemas import UserCreate, FootprintCreate
-
+import schemas
 # Emission factors (kg CO2 per unit)
 # These are rough estimates for MVP purposes
 TRANSPORT_EMISSIONS = {
