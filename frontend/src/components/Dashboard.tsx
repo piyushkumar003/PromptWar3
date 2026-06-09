@@ -45,8 +45,8 @@ const Dashboard = () => {
     const fetchData = async () => {
       try {
         const [fpRes, recRes] = await Promise.all([
-          axios.get(`https://piyush6363-ecoguide-backend.hf.space/users/${userId}/footprints`),
-          axios.get(`https://piyush6363-ecoguide-backend.hf.space/users/${userId}/recommendations`)
+          axios.get(`https://piyush6363-ecoguide-backend.hf.space/users/${userId}/footprints`, { timeout: 8000 }),
+          axios.get(`https://piyush6363-ecoguide-backend.hf.space/users/${userId}/recommendations`, { timeout: 8000 })
         ]);
         setFootprints(fpRes.data);
         setRecommendations(recRes.data);

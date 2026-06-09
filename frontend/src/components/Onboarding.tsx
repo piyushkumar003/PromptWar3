@@ -30,7 +30,7 @@ const Onboarding = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await axios.post('https://piyush6363-ecoguide-backend.hf.space/users/onboard', formData);
+      const response = await axios.post('https://piyush6363-ecoguide-backend.hf.space/users/onboard', formData, { timeout: 8000 });
       localStorage.setItem('user_id', response.data.id);
       navigate('/');
     } catch (error) {
