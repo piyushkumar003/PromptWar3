@@ -44,8 +44,8 @@ const Dashboard = () => {
     const fetchData = async () => {
       try {
         const [fpRes, recRes] = await Promise.all([
-          axios.get(`http://localhost:8000/users/${userId}/footprints`),
-          axios.get(`http://localhost:8000/users/${userId}/recommendations`)
+          axios.get(`https://piyush6363-ecoguide-backend.hf.space/users/${userId}/footprints`),
+          axios.get(`https://piyush6363-ecoguide-backend.hf.space/users/${userId}/recommendations`)
         ]);
         setFootprints(fpRes.data);
         setRecommendations(recRes.data);

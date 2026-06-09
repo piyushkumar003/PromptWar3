@@ -28,7 +28,7 @@ const Onboarding = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:8000/users/onboard', formData);
+      const response = await axios.post('https://piyush6363-ecoguide-backend.hf.space/users/onboard', formData);
       localStorage.setItem('user_id', response.data.id);
       navigate('/');
     } catch (error) {

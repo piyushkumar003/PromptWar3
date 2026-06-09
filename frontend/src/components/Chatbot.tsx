@@ -34,7 +34,7 @@ const Chatbot = ({ onClose }: { onClose: () => void }) => {
 
     try {
       const userId = localStorage.getItem('user_id');
-      const response = await axios.post(`http://localhost:8000/users/${userId}/chat`, { message: userMsg });
+      const response = await axios.post(`https://piyush6363-ecoguide-backend.hf.space/users/${userId}/chat`, { message: userMsg });
       
       setMessages(prev => [...prev, { text: response.data.reply, isBot: true }]);
     } catch (error) {
