@@ -11,10 +11,7 @@ from pydantic import BaseModel
 
 Base.metadata.create_all(bind=engine)
 
-limiter = Limiter(key_func=get_remote_address)
 app = FastAPI(title="EcoGuide AI API")
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next):
@@ -39,13 +36,11 @@ def get_db():
         db.close()
 
 @app.get("/")
-@limiter.limit("60/minute")
-def read_root(request: Request):
+def read_root():
     return {"message": "Welcome to EcoGuide AI API"}
 
 @app.post("/users/onboard", response_model=schemas.User)
-@limiter.limit("10/minute")
-def onboard_user(request: Request, user: schemas.UserCreate, db: Session = Depends(get_db)):
+def onboard_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db_user = models.User(**user.dict())
     db.add(db_user)
     db.commit()
@@ -60,21 +55,18 @@ def onboard_user(request: Request, user: schemas.UserCreate, db: Session = Depen
     return db_user
 
 @app.get("/users/{user_id}", response_model=schemas.User)
-@limiter.limit("60/minute")
-def get_user(request: Request, user_id: int, db: Session = Depends(get_db)):
+def get_user(user_id: int, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
 @app.get("/users/{user_id}/footprints", response_model=list[schemas.Footprint])
-@limiter.limit("60/minute")
-def get_user_footprints(request: Request, user_id: int, db: Session = Depends(get_db)):
+def get_user_footprints(user_id: int, db: Session = Depends(get_db)):
     return db.query(models.FootprintRecord).filter(models.FootprintRecord.user_id == user_id).all()
 
 @app.get("/users/{user_id}/recommendations", response_model=list[schemas.Recommendation])
-@limiter.limit("30/minute")
-def get_user_recommendations(request: Request, user_id: int, db: Session = Depends(get_db)):
+def get_user_recommendations(user_id: int, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -110,8 +102,7 @@ class ChatMessage(BaseModel):
     message: str
 
 @app.post("/users/{user_id}/chat")
-@limiter.limit("20/minute")
-def chatbot_message(request: Request, user_id: int, chat: ChatMessage, db: Session = Depends(get_db)):
+def chatbot_message(user_id: int, chat: ChatMessage, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.id == user_id).first()
     msg = chat.message.lower()
     
@@ -126,8 +117,7 @@ def chatbot_message(request: Request, user_id: int, chat: ChatMessage, db: Sessi
     return {"reply": response}
 
 @app.post("/users/{user_id}/simulate", response_model=schemas.SimulationResponse)
-@limiter.limit("20/minute")
-def simulate_user_footprint(request: Request, user_id: int, simulation: schemas.SimulationRequest, db: Session = Depends(get_db)):
+def simulate_user_footprint(user_id: int, simulation: schemas.SimulationRequest, db: Session = Depends(get_db)):
     """Calculate the estimated carbon savings for a hypothetical scenario."""
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
