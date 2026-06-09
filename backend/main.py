@@ -25,7 +25,7 @@ async def add_security_headers(request: Request, call_next):
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:8000", "https://*.vercel.app"],
+    allow_origins=["http://localhost:5173", "http://localhost:8000", "https://prompt-war3.vercel.app"],
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
