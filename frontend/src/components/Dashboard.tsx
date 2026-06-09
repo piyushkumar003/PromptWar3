@@ -4,6 +4,7 @@ import axios from 'axios';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { Leaf, Zap, Car, Trash2, ArrowDown } from 'lucide-react';
 import Chatbot from './Chatbot';
+import Simulator from './Simulator';
 
 const COLORS = ['#10b981', '#f59e0b', '#ef4444', '#6366f1'];
 
@@ -211,6 +212,8 @@ const Dashboard = () => {
           )}
         </div>
       </div>
+
+      <Simulator />
 
       {/* Floating Chatbot Toggle */}
       <button 

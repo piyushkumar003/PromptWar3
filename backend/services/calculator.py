@@ -86,3 +86,37 @@ def generate_recommendations(user: UserCreate, footprint: FootprintCreate):
         })
         
     return recs
+
+def simulate_footprint(user: schemas.UserCreate, simulation: schemas.SimulationRequest) -> schemas.SimulationResponse:
+    """Simulate carbon footprint based on scenario changes."""
+    # Base calculation
+    base_fp = calculate_footprint(user)
+    
+    # Create simulated user profile
+    sim_user = schemas.UserCreate(
+        name=user.name,
+        age_group=user.age_group,
+        city=user.city,
+        household_size=user.household_size,
+        transportation_habits="public_transport" if simulation.public_transport_days >= 3 else user.transportation_habits,
+        weekly_travel_distance=user.weekly_travel_distance,
+        electricity_consumption=user.electricity_consumption * (1 - (simulation.electricity_reduction_percent / 100.0)),
+        diet_type="vegetarian" if simulation.meat_reduction_percent >= 80 else user.diet_type
+    )
+    
+    # Calculate simulated footprint
+    sim_fp = calculate_footprint(sim_user)
+    
+    # Fine-tune based on exact meat reduction if not fully vegetarian
+    if simulation.meat_reduction_percent > 0 and simulation.meat_reduction_percent < 80:
+        reduction_factor = simulation.meat_reduction_percent / 100.0
+        sim_fp.food_emissions = base_fp.food_emissions * (1 - reduction_factor * 0.5) # Meat is roughly 50% of diet impact
+        sim_fp.total_emissions = sim_fp.transport_emissions + sim_fp.energy_emissions + sim_fp.food_emissions + sim_fp.waste_emissions
+        
+    savings = base_fp.total_emissions - sim_fp.total_emissions
+    
+    return schemas.SimulationResponse(
+        current_emissions=base_fp,
+        simulated_emissions=sim_fp,
+        estimated_savings=savings if savings > 0 else 0
+    )
